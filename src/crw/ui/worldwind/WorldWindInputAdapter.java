@@ -89,7 +89,7 @@ public class WorldWindInputAdapter extends OrbitViewInputHandler {
             return;
         }
         Position newPos = new Position(wwd.getCurrentPosition().getLatitude(), wwd.getCurrentPosition().getLongitude(), wwd.getView().getCurrentEyePosition().getElevation());
-        LOGGER.finest("Clicked: " + newPos.getLatitude() + ", " + newPos.getLongitude());
+        LOGGER.info("Clicked: " + newPos.getLatitude() + ", " + newPos.getLongitude());
         wwd.getView().setEyePosition(newPos);
         wwd.redraw();
     }

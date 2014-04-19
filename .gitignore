@@ -21,3 +21,5 @@ Thumbs.db
 /nbproject/
 /build/
 /dist/
+/nbproject-ubuntu64/nbproject/private/
+/nbproject-ubuntu64/build/

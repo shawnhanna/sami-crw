@@ -24,7 +24,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.GroupLayout;
 import sami.uilanguage.MarkupManager;
-import sami.uilanguage.MarkupManagerListener;
 import sami.uilanguage.fromui.FromUiMessage;
 import sami.uilanguage.toui.ToUiMessage;
 
