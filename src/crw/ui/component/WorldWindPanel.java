@@ -102,17 +102,20 @@ public class WorldWindPanel implements MarkupComponent {
 //            Configuration.setValue(AVKey.INITIAL_LONGITUDE, 51.52699);
 //            Configuration.setValue(AVKey.INITIAL_ALTITUDE, 5000.0);
 //        // Katara Beach
-            Configuration.setValue(AVKey.INITIAL_LATITUDE, 25.354484741711);
-            Configuration.setValue(AVKey.INITIAL_LONGITUDE, 51.5283418997116);
+            Configuration.setValue(AVKey.INITIAL_LATITUDE, 40.44314317238347);
+            Configuration.setValue(AVKey.INITIAL_LONGITUDE, -80.01630563258476);
             Configuration.setValue(AVKey.INITIAL_ALTITUDE, 5000.0);
 ////        // Pittsburgh
 //            Configuration.setValue(AVKey.INITIAL_LATITUDE, 40.44515205369163);
 //            Configuration.setValue(AVKey.INITIAL_LONGITUDE, -80.01877404355538);
 //            Configuration.setValue(AVKey.INITIAL_ALTITUDE, 30000.0);
         } else {
-            Configuration.setValue(AVKey.INITIAL_LATITUDE, lat);
-            Configuration.setValue(AVKey.INITIAL_LONGITUDE, lon);
-            Configuration.setValue(AVKey.INITIAL_ALTITUDE, alt);
+            Configuration.setValue(AVKey.INITIAL_LATITUDE, 40.436819);
+            Configuration.setValue(AVKey.INITIAL_LONGITUDE, -79.948540);
+            Configuration.setValue(AVKey.INITIAL_ALTITUDE, 2500.0);
+//            Configuration.setValue(AVKey.INITIAL_LATITUDE, lat);
+//            Configuration.setValue(AVKey.INITIAL_LONGITUDE, lon);
+//            Configuration.setValue(AVKey.INITIAL_ALTITUDE, alt);
         }
 
         // Set this when offline
