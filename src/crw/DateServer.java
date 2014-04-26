@@ -41,7 +41,7 @@ public class DateServer {
                     if (answer.compareTo("quit") == 0) {
                         out.println("quit");
                         break;
-                    } else if (answer.compareTo("get path") == 0) {
+                    } else if (answer.compareTo("getpath") == 0) {
                         Scanner scanner = null;
                         try {
                             scanner = new Scanner(new File("/home/shawn/src/boat_gui/sami-crw/lat_long.txt"), "latin1");
