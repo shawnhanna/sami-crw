@@ -2,6 +2,8 @@ package crw;
 
 import crw.ui.component.WorldWindPanel;
 import crw.ui.widget.SelectGeometryWidget;
+import gov.nasa.worldwind.Configuration;
+import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.LatLon;
 import gov.nasa.worldwind.geom.Position;
 import gov.nasa.worldwind.layers.RenderableLayer;
@@ -34,6 +36,7 @@ import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import sami.environment.EnvironmentProperties;
 import sami.path.Location;
+import sami.ui.MissionMonitor;
 import static sami.ui.MissionMonitor.LAST_EPF_FILE;
 import static sami.ui.MissionMonitor.LAST_EPF_FOLDER;
 
@@ -49,13 +52,18 @@ public class EnvironmentManagerF extends JFrame {
     WorldWindPanel wwPanel;
 
     public EnvironmentManagerF() {
-        super("ObstacleManagerF");
-        setTitle("EnvironmentManagerF");
+        super("EnvironmentManagerF");
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(new BorderLayout());
 
         // Add map
+        ArrayList<String> layerNames = new ArrayList<String>();
+        layerNames.add("Bing Imagery");
+        layerNames.add("Blue Marble (WMS) 2004");
+        layerNames.add("Scale bar");
+        layerNames.add("Place Names");
         wwPanel = new WorldWindPanel();
-        wwPanel.createMap();
+        wwPanel.createMap(layerNames);
         getContentPane().add(wwPanel.component, BorderLayout.CENTER);
         // Add widgets
         List<SelectGeometryWidget.SelectMode> modes = Arrays.asList(SelectGeometryWidget.SelectMode.AREA, SelectGeometryWidget.SelectMode.NONE, SelectGeometryWidget.SelectMode.CLEAR);
@@ -101,8 +109,18 @@ public class EnvironmentManagerF extends JFrame {
         filePanel.add(saveAsB);
         getContentPane().add(filePanel, BorderLayout.SOUTH);
 
+        // Try to load the last used EPF file
+        Preferences p = Preferences.userRoot();
+        try {
+            String lastEpfPath = p.get(LAST_EPF_FILE, null);
+            if (lastEpfPath != null) {
+                loadEpf(new File(lastEpfPath));
+            }
+        } catch (AccessControlException e) {
+            LOGGER.severe("Failed to load last used EPF");
+        }
+
         pack();
-        setVisible(true);
     }
 
     public void applyObstacleList(ArrayList<ArrayList<Location>> obstacleList) {
@@ -161,12 +179,20 @@ public class EnvironmentManagerF extends JFrame {
         // Update ep values
         ArrayList<ArrayList<Location>> obstacleList = getObstacleList();
         environmentProperties.setObstacleList(obstacleList);
+        environmentProperties.setDefaultLocation(Conversion.positionToLocation(wwPanel.getCanvas().getView().getCurrentEyePosition()));
+
+        if (wwPanel.getCanvas().getView().getCurrentEyePosition() != null) {
+            Location currentLocation = Conversion.positionToLocation(wwPanel.getCanvas().getView().getCurrentEyePosition());
+            currentLocation.setAltitude(wwPanel.getCanvas().getView().getCurrentEyePosition().getElevation());
+        } else {
+            LOGGER.severe("Eye position is NULL");
+        }
 
         Preferences p = Preferences.userRoot();
         p.put(LAST_EPF_FILE, file.getAbsolutePath());
         p.put(LAST_EPF_FOLDER, file.getParent());
 
-        // Serialize dc
+        // Serialize ep
         ObjectOutputStream oos;
         try {
             oos = new ObjectOutputStream(new FileOutputStream(file));
@@ -197,8 +223,8 @@ public class EnvironmentManagerF extends JFrame {
 
     public boolean open() {
         Preferences p = Preferences.userRoot();
-        String lastConfName = p.get(LAST_EPF_FILE, "");
-        JFileChooser chooser = new JFileChooser(lastConfName);
+        String lastEpfFolder = p.get(LAST_EPF_FOLDER, "");
+        JFileChooser chooser = new JFileChooser(lastEpfFolder);
         FileNameExtensionFilter filter = new FileNameExtensionFilter("Environment properties files", "epf");
         chooser.setFileFilter(filter);
         int ret = chooser.showOpenDialog(null);
@@ -206,9 +232,14 @@ public class EnvironmentManagerF extends JFrame {
             return false;
         }
         file = chooser.getSelectedFile();
+        return loadEpf(file);
+    }
+
+    public boolean loadEpf(File epfFile) {
+        LOGGER.info("Reading: " + epfFile.toString());
+        Preferences p = Preferences.userRoot();
         try {
-            LOGGER.info("Reading: " + file.toString());
-            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(epfFile));
             environmentProperties = (EnvironmentProperties) ois.readObject();
 
             if (environmentProperties == null) {
@@ -217,16 +248,19 @@ public class EnvironmentManagerF extends JFrame {
                 return false;
             } else {
                 try {
-                    p.put(LAST_EPF_FILE, file.getAbsolutePath());
-                    p.put(LAST_EPF_FOLDER, file.getParent());
+                    p.put(LAST_EPF_FILE, epfFile.getAbsolutePath());
+                    p.put(LAST_EPF_FOLDER, epfFile.getParent());
                 } catch (AccessControlException e) {
                     LOGGER.severe("Failed to save preferences");
                 }
-                LOGGER.info("Read: " + file.toString());
-                setTitle("EnvironmentManagerF: " + LAST_EPF_FILE);
+                LOGGER.info("Read: " + epfFile.toString());
+                setTitle("EnvironmentManagerF: " + epfFile.toString());
 
                 // Apply ep values
                 applyObstacleList(environmentProperties.getObstacleList());
+                // Apply default view
+                Position defaultPosition = Conversion.locationToPosition(environmentProperties.getDefaultLocation());
+                wwPanel.getCanvas().getView().setEyePosition(defaultPosition);
 
                 return true;
             }
@@ -241,6 +275,10 @@ public class EnvironmentManagerF extends JFrame {
     }
 
     public static void main(String[] args) {
-        EnvironmentManagerF mf = new EnvironmentManagerF();
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new EnvironmentManagerF().setVisible(true);
+            }
+        });
     }
 }

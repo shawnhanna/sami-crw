@@ -1,7 +1,7 @@
 package crw.handler;
 
 import crw.Conversion;
-import crw.Helper;
+import crw.CrwHelper;
 import crw.event.input.proxy.ProxyCreated;
 import crw.event.input.proxy.ProxyPathCompleted;
 import crw.event.input.proxy.ProxyPathFailed;
@@ -18,7 +18,6 @@ import crw.event.output.proxy.ProxyExecutePath;
 import crw.event.output.proxy.ProxyExploreArea;
 import crw.event.output.proxy.ProxyGotoPoint;
 import crw.event.output.proxy.ProxyResendWaypoints;
-import crw.event.output.proxy.ProxyStationKeep;
 import crw.event.output.service.ProxyCompareDistanceRequest;
 import crw.general.FastSimpleBoatSimulator;
 import crw.proxy.BoatProxy;
@@ -206,10 +205,10 @@ public class ProxyEventHandler implements EventHandlerInt, ProxyListenerInt, Inf
                     }
                     List<Location> proxyLocations;
                     for (int i = 0; i < lawnmowerLocations.size() / MAX_SEGMENTS_PER_PROXY + 1; i++) {
-//                    LOGGER.log(Level.FINE, "i = " + i + " of " + (lawnmowerLocations.size() / MAX_SEGMENTS_PER_PROXY + 1) + ": sublist " + i * MAX_SEGMENTS_PER_PROXY + ", " + Math.min(lawnmowerLocations.size(), (i + 1) * MAX_SEGMENTS_PER_PROXY));
+//                        LOGGER.log(Level.FINE, "i = " + i + " of " + (lawnmowerLocations.size() / MAX_SEGMENTS_PER_PROXY + 1) + ": sublist " + i * MAX_SEGMENTS_PER_PROXY + ", " + Math.min(lawnmowerLocations.size(), (i + 1) * MAX_SEGMENTS_PER_PROXY));
                         proxyLocations = lawnmowerLocations.subList(i * MAX_SEGMENTS_PER_PROXY, Math.min(lawnmowerLocations.size(), (i + 1) * MAX_SEGMENTS_PER_PROXY));
                         // Send the path
-//                    LOGGER.log(Level.FINE, "Creating ProxyExecutePath with " + proxyLocations.size() + " waypoints for proxy " + tokenProxies.get(proxyIndex));
+//                        LOGGER.log(Level.FINE, "Creating ProxyExecutePath with " + proxyLocations.size() + " waypoints for proxy " + tokenProxies.get(proxyIndex));
                         PathUtm path = new PathUtm(proxyLocations);
                         Hashtable<ProxyInt, Path> thisProxyPath = new Hashtable<ProxyInt, Path>();
                         thisProxyPath.put(tokenProxies.get(proxyIndex), path);
@@ -238,7 +237,7 @@ public class ProxyEventHandler implements EventHandlerInt, ProxyListenerInt, Inf
             ArrayList<ProxyInt> relevantProxies = new ArrayList<ProxyInt>();
             for (Token token : tokens) {
                 if (token.getProxy() != null && token.getProxy() instanceof BoatProxy) {
-                    Location assembleLocation = null;
+                    Location assembleLocation;
                     if (assembleCounter == 0) {
                         assembleLocation = request.getLocation();
                     } else {
@@ -387,7 +386,7 @@ public class ProxyEventHandler implements EventHandlerInt, ProxyListenerInt, Inf
                 UTMCoordinate utmc = createEvent.startLocation.getCoordinate();
                 UtmPose p1 = new UtmPose(new Pose3D(utmc.getEasting(), utmc.getNorthing(), 0.0, 0.0, 0.0, 0.0), new Utm(utmc.getZoneNumber(), utmc.getHemisphere().equals(Hemisphere.NORTH)));
                 server.setPose(p1);
-                name = Helper.getUniqueName(name, proxyNames);
+                name = CrwHelper.getUniqueName(name, proxyNames);
                 proxyNames.add(name);
                 ProxyInt proxy = Engine.getInstance().getProxyServer().createProxy(name, color, new InetSocketAddress("localhost", 11411 + portCounter));
                 color = randomColor();
@@ -405,21 +404,6 @@ public class ProxyEventHandler implements EventHandlerInt, ProxyListenerInt, Inf
                 for (GeneratedEventListenerInt listener : listeners) {
                     listener.eventGenerated(proxyCreated);
                 }
-            }
-        } else if (oe instanceof ProxyStationKeep) {
-            int numProxies = 0;
-            ArrayList<BoatProxy> tokenProxies = new ArrayList<BoatProxy>();
-            for (Token token : tokens) {
-                if (token.getProxy() != null && token.getProxy() instanceof BoatProxy) {
-                    tokenProxies.add((BoatProxy) token.getProxy());
-                    numProxies++;
-                }
-            }
-            if (numProxies == 0) {
-                LOGGER.log(Level.WARNING, "Place with ProxyStationKeep has no tokens with proxies attached: " + oe);
-            }
-            for (BoatProxy boatProxy : tokenProxies) {
-                boatProxy.handleEvent(oe);
             }
         } else if (oe instanceof ProxyEmergencyAbort) {
             int numProxies = 0;
@@ -656,13 +640,5 @@ public class ProxyEventHandler implements EventHandlerInt, ProxyListenerInt, Inf
             p1 = p2;
         }
         return result;
-    }
-
-    public static void main(String[] args) {
-        for (int i = 0; i < 10; i++) {
-            System.out.println("" + i);
-            System.out.println("\t" + ((int) i % 6));
-            System.out.println("\t" + ((int) i / 6));
-        }
     }
 }
